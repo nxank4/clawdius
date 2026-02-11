@@ -1,5 +1,10 @@
+# Sandbox
 workspace/
+
+# Environment
 .env
+
+# Python
 .venv/
 __pycache__/
 *.py[cod]
@@ -9,3 +14,15 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+config/
+
+# IDE
+.vscode/
+.idea/

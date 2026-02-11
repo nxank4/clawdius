@@ -1,5 +1,6 @@
+anthropic
+discord.py
+pydantic-settings
 loguru
-pydantic
 python-dotenv
-typer
-httpx
+pytest
