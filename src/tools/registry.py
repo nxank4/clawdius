@@ -2,11 +2,10 @@ import asyncio
 from pathlib import Path
 
 import aiofiles
-import httpx
 from loguru import logger
 
 from src.core.config import settings
-from src.tools.browser import analyze_page_visual, get_page_content
+from src.tools.browser import browser_manager
 
 TOOL_TIMEOUT = 30
 
@@ -15,13 +14,36 @@ TOOL_TIMEOUT = 30
 TOOLS = [
     {
         "name": "web_search",
-        "description": "Search the web for information using DuckDuckGo. Returns a summary of the top results.",
+        "description": "Search the web using DuckDuckGo via a real browser. Returns titles, snippets, and URLs of the top results.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "The search query."},
             },
             "required": ["query"],
+        },
+    },
+    {
+        "name": "read_webpage",
+        "description": "Visit a URL with a real browser and return the page content as Markdown. Use this for reading articles, docs, or any text-heavy page.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "The URL to visit."},
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "analyze_page_visual",
+        "description": "Take a screenshot of a URL and visually analyze it with the LLM. Use this when you need to understand page layout, charts, images, or visual elements that text extraction would miss.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "The URL to screenshot."},
+                "query": {"type": "string", "description": "What to look for or analyze in the screenshot."},
+            },
+            "required": ["url", "query"],
         },
     },
     {
@@ -58,29 +80,6 @@ TOOLS = [
             "required": ["command"],
         },
     },
-    {
-        "name": "get_page_content",
-        "description": "Visit a URL with a real browser and return the page content as Markdown. Fast and cheap — use this for reading articles, docs, or any text-heavy page.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "url": {"type": "string", "description": "The URL to visit."},
-            },
-            "required": ["url"],
-        },
-    },
-    {
-        "name": "analyze_page_visual",
-        "description": "Take a screenshot of a URL and visually analyze it with the LLM. Use this when you need to understand page layout, charts, images, or visual elements that text extraction would miss.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "url": {"type": "string", "description": "The URL to screenshot."},
-                "query": {"type": "string", "description": "What to look for or analyze in the screenshot."},
-            },
-            "required": ["url", "query"],
-        },
-    },
 ]
 
 
@@ -91,29 +90,6 @@ def _safe_path(relative: str) -> Path:
     if not str(target).startswith(str(workspace)):
         raise ValueError(f"Path escapes sandbox: {relative}")
     return target
-
-
-async def web_search(query: str) -> str:
-    logger.info(f"[tool] web_search: {query}")
-    try:
-        api_url = f"{settings.DDGS_API_URL}/search"
-        async with httpx.AsyncClient(timeout=15) as client:
-            resp = await client.get(api_url, params={"q": query, "max_results": 5})
-            resp.raise_for_status()
-            data = resp.json()
-
-        if not data:
-            return "No results found."
-
-        lines = []
-        for r in data:
-            title = r.get("title", "")
-            body = r.get("body", "")
-            href = r.get("href", "")
-            lines.append(f"**{title}**\n{body}\n{href}")
-        return "\n\n".join(lines)
-    except Exception as e:
-        return f"Search failed: {e}"
 
 
 async def read_file(path: str) -> str:
@@ -161,12 +137,12 @@ async def execute_shell(command: str) -> str:
 
 # Dispatch map
 DISPATCH = {
-    "web_search": web_search,
+    "web_search": lambda **kw: browser_manager.web_search(**kw),
+    "read_webpage": lambda **kw: browser_manager.read_webpage(**kw),
+    "analyze_page_visual": lambda **kw: browser_manager.analyze_page_visual(**kw),
     "read_file": read_file,
     "write_file": write_file,
     "execute_shell": execute_shell,
-    "get_page_content": get_page_content,
-    "analyze_page_visual": analyze_page_visual,
 }
 
 
