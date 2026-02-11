@@ -41,14 +41,22 @@ class ClawdiusBot(discord.Client):
 
         logger.info(f"Request from {message.author}: {prompt[:80]}")
 
+        tool_log = []
+
+        async def on_tool_call(name: str, args: dict) -> None:
+            tool_log.append(name)
+
         async with message.channel.typing():
             try:
-                response = await self.brain.think(prompt)
+                response = await self.brain.think(prompt, on_tool_call=on_tool_call)
             except Exception as e:
                 logger.error(f"Brain error: {e}")
                 await message.reply(f"Something went wrong: `{e}`")
                 return
 
-        # Split long responses into chunks
+        if tool_log:
+            tools_used = ", ".join(f"`{t}`" for t in tool_log)
+            response = f"{response}\n\n_Tools used: {tools_used}_"
+
         for i in range(0, len(response), DISCORD_MAX_LEN):
             await message.reply(response[i : i + DISCORD_MAX_LEN])

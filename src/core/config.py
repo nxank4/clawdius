@@ -9,6 +9,8 @@ class Settings(BaseSettings):
 
     DISCORD_TOKEN: str = ""
     DISCORD_PROXY: str = ""
+    OUTBOUND_PROXY: str = ""
+    DDGS_API_URL: str = "http://localhost:8000"
     ALLOWED_CHANNEL_ID: int | None = None
     ALLOWED_USER_ID: int | None = None
 

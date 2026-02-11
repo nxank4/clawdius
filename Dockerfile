@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM mcr.microsoft.com/playwright/python:v1.41.0-jammy
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY

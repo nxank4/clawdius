@@ -8,6 +8,10 @@ dependencies = [
     "pydantic-settings",
     "loguru",
     "python-dotenv",
+    "aiofiles",
+    "playwright",
+    "beautifulsoup4",
+    "html2text",
 ]
 
 [tool.pytest.ini_options]

@@ -3,4 +3,8 @@ discord.py
 pydantic-settings
 loguru
 python-dotenv
+aiofiles
+playwright
+beautifulsoup4
+html2text
 pytest

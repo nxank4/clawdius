@@ -13,3 +13,31 @@ services:
       - "host.docker.internal:host-gateway"
     env_file:
       - .env
+    environment:
+      LLM_BASE_URL: http://host.docker.internal:8080
+      DDGS_API_URL: http://ddgs:8000
+      WORKSPACE_DIR: /app/workspace
+      http_proxy: ${HTTP_PROXY:-http://proxy.hcm.fpt.vn:80}
+      https_proxy: ${HTTPS_PROXY:-http://proxy.hcm.fpt.vn:80}
+      no_proxy: localhost,127.0.0.1,host.docker.internal,ddgs
+    depends_on:
+      ddgs:
+        condition: service_healthy
+
+  ddgs:
+    build:
+      context: ./services/ddgs
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+    ports:
+      - "8000:8000"
+    environment:
+      http_proxy: ${HTTP_PROXY:-http://proxy.hcm.fpt.vn:80}
+      https_proxy: ${HTTPS_PROXY:-http://proxy.hcm.fpt.vn:80}
+      no_proxy: localhost,127.0.0.1
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5

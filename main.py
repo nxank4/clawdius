@@ -11,7 +11,7 @@ def main() -> None:
         logger.error("DISCORD_TOKEN is not set. Check your .env file.")
         raise SystemExit(1)
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.WARNING)
 
     bot = ClawdiusBot()
     logger.info("Starting Clawdius...")
